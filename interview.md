@@ -1,4 +1,5 @@
-# difference between alb and nlb
+<span style="color:red"># difference between alb and nlb</span> 
+
     alb is the application load balancer 
     it is a layer 7 load balance
     http and https protocal support
@@ -239,6 +240,7 @@
         same node connected with Local vswitch
         differnt node connected with Route via Azure VNET
 ![Architecture Diagram](./pics/k8_AWS_EKS_Pod_pod_communication_same_pod_different_pod.png)
+![Architecture Diagram](./pics/k8_AWS_EKS_EC2_ENI.png)
 
 # Daily activity of k8
     Check pod health checks:    kubectl get pod -a:     grafana dashboard alterting pod crashloop
