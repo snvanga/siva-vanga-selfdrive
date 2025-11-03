@@ -1,5 +1,4 @@
-<span style="color:red"># difference between alb and nlb</span> 
-
+## difference between alb and nlb
     alb is the application load balancer 
     it is a layer 7 load balance
     http and https protocal support
@@ -13,10 +12,19 @@
     HTTPS (HyperText Transfer Protocol Secure) -Secure web traffic
     TCP (Transmission Control Protocol) - Web, email, SSH
     UDP (User Datagram Protocol)    - DNS, video streaming, gaming
+![Architecture Diagram](./pics/k8_AWS_EKS_ALB_types.png)
+
+## Ingress controller
+    An Ingress Controller is a Kubernetes component that manages external access to multiple services inside the cluster — typically over HTTP and HTTPS.
+    It acts as a Layer 7 (application layer) load balancer, enabling path-based and host-based routing to different services using a single entry point.
+
+    Client → DNS → Load Balancer (ALB) → Ingress Controller (ALB controller) → Service → Pod
+
+    By default, an EKS cluster doesn’t come with an ALB Ingress Controller.
 
 
 ---------------------------------------------
-## CI/CD Pipeline Flow Explanation (Step-by-Step)------------------
+# CI/CD Pipeline Flow Explanation (Step-by-Step)------------------
 
  ## Code Push and Pull Request (PR):
     Developers push their code changes to the Git repository.
