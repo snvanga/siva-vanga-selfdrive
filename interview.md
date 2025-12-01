@@ -149,6 +149,30 @@
                     Use a different containerPort or stop conflicting sidecar.
                     Sidecar: The main container is the “driver”, and the sidecar is the “assistant” helping it do its job.
 
+
+    # Daily activity of k8
+    Check pod health checks:    kubectl get pod -a:     grafana dashboard alterting pod crashloop
+    Check pod restart alert:    kubectl logs:        Prometheus metric restarts_total triggers alert
+    node resources:             kubectl top node:   Grafana Node Exporter metrics
+    pvc not bound:              kubectl get pvc:    Alert: “PVC pending > 10 minutes”
+    cluster utilzation:         kubectl get node:   Grafana cluster overview dashboard
+    Deployement status:         kubectl rollout status: Grafana “Deployment health” dashboard
+
+    “In our setup, Grafana was deployed as part of the kube-prometheus-stack Helm chart, which automatically loads default dashboards for Kubernetes cluster, node, and pod metrics. We also imported a few community dashboards from Grafana.com to monitor EKS-specific metrics like API latency and pod restarts.”
+
+## python related cdk---
+![Architecture Diagram](./pics/AWS_CDK_py.png)
+![Architecture Diagram](./pics/AWS_CDK_py_001.png)
+    “In one of our projects, we needed to ensure data resilience across AWS regions, so I automated S3 Cross-Region Replication (CRR) using AWS CDK in Python.
+
+    I created a CDK stack that defines both the source and destination buckets, enabled versioning, and attached an IAM role allowing replication.
+    Then, I configured the replication rule at the resource level, specifying the destination ARN.
+
+    Once deployed, any new object uploaded to the primary bucket in ap-south-1 is automatically replicated to the DR bucket in ap-southeast-1.
+
+    I also integrated a Python boto3 validation script that periodically checks whether the replication is successful by comparing object keys and timestamps.
+    This setup is part of our Disaster Recovery strategy, ensuring RPO (Recovery Point Objective) of near-zero for S3 data.”
+
  # AWS tools----
     minoring tools like cloud watch and could trail.
         cloud watch monitoring system performing. (monitor cpu usage)
@@ -177,6 +201,16 @@
     teUse ClusterIP for internal-only communication.
 
   # S3
+    types:  standrad s3 bucket: for storing TF state files, store build artifactory
+            versioning : TF remote backend state for versioning and rollback
+            Access-Logged :for access logs or audit tails
+
+            # Enable Block Public Access at bucket and account level.  
+            AWS KMS work flow:
+                User    → AWS Service (e.g., S3, EBS)
+                        → Calls AWS KMS API
+                        → KMS uses your key to encrypt/decrypt
+                        → Encrypted data stored in service
 
   # Cloud Trail
         Minitoring the logs. when unexpectly and bymistake any one deleted resources.
@@ -215,6 +249,43 @@
     remove network:     docker network rm <network_name>
     Connect container to network:
         docker network connect <network_name> <container_name>
+
+    clear docker junk files:        docker system prune -a -f
+    find the files larger 1GB:      find / -type f -size +1GB -exec ls -lh {} \;
+    find larger directories in specific path: du -h /var/* | sort -h
+    find which directory used more space:    du -sh * | sort -h
+
+
+    Linux commands
+    Most space dir  du -sh * | sort -h
+    Find files larger than 1 GB  
+            find / -type f size +1GB -exec ls -lh {}\;
+    which dir used more space  du -sh * | sort -h
+    Disk usage  df -h and du -sh /path
+    top
+    Real-time CPU, memory, load average, and process usage.
+    vmstat
+    Shows memory, CPU, I/O, swap usage (system performance overview).
+    free
+    Displays total, used, and free memory (RAM + swap).
+    df
+    Disk usage per filesystem.
+    Kill process: kill <PID>
+    Change permission  chmod 755 file
+    Change file owner  sudo chown user:group filename.sh
+    User creation:
+    New user  sudo useradd user_name
+    New group  sudo groupadd group_name
+    Add in group  sudo usermod -aG group_name user_name
+    Give only one user required readonly access   sudo setfacl -m u:use_name:r-- /file_path.sh
+    Remove write access particular user  sudo setfacl -Rm u:user_name:rx /file_path.sh
+
+    Cron job
+    Find list of jobs  Crontab -l
+    Edit the cron job  Crontab -e
+                                    ***** /file_path.sh
+
+	
     
 
 # NACL (Network Access Control List): Subnet Level/ Stateless/ Default NACL allows all/ 
@@ -314,6 +385,10 @@
 # You have a Terraform setup for multiple OUs (Dev, Prod, Security) under AWS Organization.
     You only want to apply the changes to the Dev OU. How do you ensure that?
 
+# how we can choose tf state file in s3 bucket?
+    we can use backend.tf
+    we can use versioning_configuration statu= enable 
+
 
 
     
@@ -412,6 +487,9 @@
                 Vault Integration - secure secret manager
                 Prometheus & Graffana - obeserbility of api performance
                 IAM Roles - secure access b/w eks pods and aws svc's
+
+
+
 
     =============
     Thanks for the opportunity. I’m committed to giving my 100% and delivering the best results — both technically and professionally.”
