@@ -1,4 +1,5 @@
 ## difference between alb and nlb
+
     alb is the application load balancer 
     it is a layer 7 load balance
     http and https protocal support
@@ -15,6 +16,7 @@
 ![Architecture Diagram](./pics/k8_AWS_EKS_ALB_types.png)
 
 ## Ingress controller
+
     An Ingress Controller is a Kubernetes component that manages external access to multiple services inside the cluster — typically over HTTP and HTTPS.
     It acts as a Layer 7 (application layer) load balancer, enabling path-based and host-based routing to different services using a single entry point.
 
@@ -22,44 +24,63 @@
 
     By default, an EKS cluster doesn’t come with an ALB Ingress Controller.
 
-
 ---------------------------------------------
+
 # CI/CD Pipeline Flow Explanation (Step-by-Step)------------------
 
- ## Code Push and Pull Request (PR):
+## Code Push and Pull Request (PR)
+
     Developers push their code changes to the Git repository.
     After the push, they raise a Pull Request (PR) for review and approval.
     Once the PR is reviewed and merged into the required branch (e.g., main or develop), it automatically triggers the CI/CD pipeline.
- ## Pipeline Trigger when PR merged:
+
+## Pipeline Trigger when PR merged
+
     The pipeline is configured to trigger automatically on PR merges using a webhook or pipeline trigger configuration in the CI tool (e.g., Jenkins, GitHub Actions, GitLab CI, or Harness).
- ## Build Stage (Maven Build):
+
+## Build Stage (Maven Build)
+
     The pipeline starts with a Maven build, compiling the source code.
     It runs unit test cases to validate code functionality and quality.
     Maven then packages the application based on the pom.xml configuration — generating .jar or .war files depending on the project type. (jar file is java based .war file for web based)
- ## Docker Build Stage:
+
+## Docker Build Stage
+
     Using a Dockerfile, the pipeline builds the Docker image of the application.
     The image is tagged with version details (for example: v1.0.0 or build-<build_id>) for version control and traceability.
- ## Security Scanning (Trivy):
+
+## Security Scanning (Trivy)
+
     The built image is scanned using Trivy to identify vulnerabilities.
     If critical vulnerabilities are found, the pipeline fails and sends feedback to the developer to fix the issues.
     If the scan passes with no critical issues, the pipeline proceeds.
- ## Push to Amazon ECR:
+
+## Push to Amazon ECR
+
     The pipeline logs in to Amazon Elastic Container Registry (ECR).
     The validated Docker image is pushed to ECR for versioned storage and future deployments.
- ## Disaster Recovery Backup in S3 bucket:
+
+## Disaster Recovery Backup in S3 bucket
+
     For disaster recovery purposes, a copy of the Docker image (or metadata) is also stored in an S3 bucket.
- ## Deployment to Amazon ECS:
+
+## Deployment to Amazon ECS
+
     The pipeline updates the ECS Task Definition with the new Docker image tag.
     The ECS Service is updated or redeployed to use the new task definition.
     ECS automatically schedules new tasks and manages scaling based on load and desired count.
- ## Post-Deployment Validation:
+
+## Post-Deployment Validation
+
     ECS monitors the deployment to ensure containers are running successfully.
     If issues occur, ECS or the pipeline can trigger an automatic rollback to the previous stable image.
 
+## Hi [Name]
 
-## Hi [Name],
     My name is Siva Vanga, and I am based in Hyderabad. I have been working with Ascendion for the past few years, contributing to major client projects like Huron, Rackspace, and TransUnion.
+
 # TransUnion Project – Migration Project
+
    “In my last project, I was responsible for migrating multiple repositories from Bitbucket and GitHub into Harness to streamline our CI/CD workflows and improve deployment automation.
 
     We used Kong Konnect for API management, where I set up both the Control Plane (CP) and Data Planes (DP) to ensure secure and efficient communication between microservices. The infrastructure setup involved creating CP and DP configurations and synchronizing them using Ansible Tower.
@@ -81,7 +102,8 @@
 
     We used Grafana dashboards to monitor API and plugin performance, pulling metrics from Kong and Prometheus to track latency, request rates, and error responses. This, combined with the Kong Konnect UI monitoring, provided complete visibility across CP, DP, plugin health, and API traffic behavior.”
 
- # Rackspace Project – AWS Multi-Account Management
+# Rackspace Project – AWS Multi-Account Management
+
     Managed approximately 700 AWS accounts, leveraging AWS Control Tower for efficient governance.
     Organized accounts into logical groups and applied Service Control Policies (SCPs) to enforce security and compliance at scale.
     Avoided the need to manually create IAM policies for every individual account.
@@ -96,7 +118,7 @@
     Troubleshooting: Identifying and resolving deployment and configuration errors
     Project Delivery: Successfully delivered large-scale migration and governance projects
 
- # Day-to-Day Kubernetes ( k8 ) Activities (Final Polished Version)
+# Day-to-Day Kubernetes ( k8 ) Activities (Final Polished Version)
 
         In our setup, Grafana was deployed as part of the kube-prometheus-stack Helm chart, which automatically loads dashboards for Kubernetes clusters, nodes, and pods.
 
@@ -160,20 +182,46 @@
 
     “In our setup, Grafana was deployed as part of the kube-prometheus-stack Helm chart, which automatically loads default dashboards for Kubernetes cluster, node, and pod metrics. We also imported a few community dashboards from Grafana.com to monitor EKS-specific metrics like API latency and pod restarts.”
 
-## python related cdk---
+## # AWS CDK with Python --
+
 ![Architecture Diagram](./pics/AWS_CDK_py.png)
 ![Architecture Diagram](./pics/AWS_CDK_py_001.png)
-    “In one of our projects, we needed to ensure data resilience across AWS regions, so I automated S3 Cross-Region Replication (CRR) using AWS CDK in Python.
+    
+    “In one of our projects, we needed to ensure data resilience (continuous recovery and cross-region availability) across AWS regions. So I automated S3 Cross-Region Replication (CRR) using AWS CDK in Python.
+    
+    I built a CDK stack that defines both the source and destination S3 buckets, enabled versioning, and created an IAM replication role. Then, I configured replication rules programmatically by specifying the destination bucket ARN and handling delete-marker replication.
+    
+    Once deployed, any new object uploaded to the primary bucket in ap-south-1 is automatically replicated to the DR bucket in another region.
+    
+    To operationalize this setup, I added a Python boto3 validation script running on a schedule (AWS Lambda + EventBridge) that checks:
+    
+    whether new objects are replicated
+    replication timestamps
+    missing versions or failures
+    
+    This helps us verify the RPO (Recovery Point Objective) stays near zero.
+    
+    🔔 CloudWatch Alerts + SNS Notifications (Added Component)
+   
+    I ensure proactive monitoring, I integrated CloudWatch + SNS notifications into the CDK:
+    The Lambda validation script pushes custom CloudWatch metrics, such as:
+        ReplicationSuccessCount
+        ReplicationFailureCount
+        ReplicationLagSeconds
 
-    I created a CDK stack that defines both the source and destination buckets, enabled versioning, and attached an IAM role allowing replication.
-    Then, I configured the replication rule at the resource level, specifying the destination ARN.
+    I created CloudWatch Alarms for:
+    Replication failures > 0
+    Replication lag > threshold (e.g., >120 seconds)
 
-    Once deployed, any new object uploaded to the primary bucket in ap-south-1 is automatically replicated to the DR bucket in ap-southeast-1.
+    These alarms trigger an SNS topic that sends notifications via:
+        Email
+        Slack (via webhook)
+        PagerDuty (if configured)
+    So, anytime replication is delayed or fails, the DevOps team immediately receives alerts and can take corrective action.
 
-    I also integrated a Python boto3 validation script that periodically checks whether the replication is successful by comparing object keys and timestamps.
-    This setup is part of our Disaster Recovery strategy, ensuring RPO (Recovery Point Objective) of near-zero for S3 data.”
 
- # AWS tools----
+# AWS tools----
+
     minoring tools like cloud watch and could trail.
         cloud watch monitoring system performing. (monitor cpu usage)
         cloud trail is who is done and what is happens.
@@ -182,7 +230,8 @@
         Centralized security and compliance monitoring across your AWS environment.
     
 
-  # ECS and EKS 
+# ECS and EKS
+
     ECS full managed container service
     used for only aws
     cluster managed automatically
@@ -200,7 +249,8 @@
     Use NLB (Service type LoadBalancer) for non-HTTP apps or static-IP access.
     teUse ClusterIP for internal-only communication.
 
-  # S3
+# S3
+
     types:  standrad s3 bucket: for storing TF state files, store build artifactory
             versioning : TF remote backend state for versioning and rollback
             Access-Logged :for access logs or audit tails
@@ -212,19 +262,27 @@
                         → KMS uses your key to encrypt/decrypt
                         → Encrypted data stored in service
 
-  # Cloud Trail
+# Cloud Trail
+
         Minitoring the logs. when unexpectly and bymistake any one deleted resources.
-  # Cloud Watch
+
+# Cloud Watch
+
         Mintoring the metrics logs. when like how much cpu memory utilized and what s pending all these things.
 
-  # security hub
+# security hub
+
         integrated tools likes guard duty and cloud trail
         it is the centralized 
 
 ===============================
- ## Docker
+
+## Docker
+
 ===============================
+
 # Docker Commnads
+
     docker images
     docker pull <image_name>:<tag>
     docker build -t <image_name>:<tag> <path>
@@ -285,29 +343,39 @@
     Edit the cron job  Crontab -e
                                     ***** /file_path.sh
 
-	
+ 
     
 
-# NACL (Network Access Control List): Subnet Level/ Stateless/ Default NACL allows all/ 
-# Security Group:     Instance Level/ Stateful/ Default SG denies all inbound/ 
+# NACL (Network Access Control List): Subnet Level/ Stateless/ Default NACL allows all/
+
+# Security Group:     Instance Level/ Stateful/ Default SG denies all inbound/
 
 ==========================================
+
 ## K8
+
 ===================================
+
 # You want to restrict inter-namespace communication. How?
 
 # how to connect service and pods
+
 # diff docker container and k8 pod
+
     k8 pod is lowest level deployment
     multiple container is maintained in the pod
 
 # what is namespace
+
     logical isolation of resources, networking, policies and rbac and everything.
+
 # PV and PVC
+
     PV means persistant volume
     PVC means persistant volume claim
 
 # pod to pod connectivity EKS
+
     # pod to pod connectivity with same node
         connected with linux bridge, no VPC involvement, band width node-level NIC limit
     # pod to pod connectivity with different node
@@ -322,6 +390,7 @@
 ![Architecture Diagram](./pics/k8_AWS_EKS_EC2_ENI.png)
 
 # Daily activity of k8
+
     Check pod health checks:    kubectl get pod -a:     grafana dashboard alterting pod crashloop
     Check pod restart alert:    kubectl logs:        Prometheus metric restarts_total triggers alert
     node resources:             kubectl top node:   Grafana Node Exporter metrics
@@ -331,27 +400,41 @@
 
     “In our setup, Grafana was deployed as part of the kube-prometheus-stack Helm chart, which automatically loads default dashboards for Kubernetes cluster, node, and pod metrics. We also imported a few community dashboards from Grafana.com to monitor EKS-specific metrics like API latency and pod restarts.”
 
- #   Daily workflow in real DevOps setup
-   #    Morning check dashboards
+# Daily workflow in real DevOps setup
+
+# Morning check dashboards
+
             Open Grafana dashboards (Cluster Overview, Workload Health).
             Review any red/yellow alerts triggered overnight.
             Check alert notifications (Slack/Email).
-   #    Investigate alerts
+
+# Investigate alerts
+
             If Grafana shows a spike in CPU or pod restarts → use kubectl to debug the specific pod or deployment.
-   #    Remediate issues
+
+# Remediate issues
+
             Restart pods, scale deployments, or fix underlying issues (like node resource exhaustion).
-   #    Update monitoring rules if needed
+
+# Update monitoring rules if needed
+
             Modify alert thresholds (e.g., adjust CPU limits).
             Add new panels for new services.
-   #    Document findings
+
+# Document findings
+
             Update team Slack or incident management system.
   
 ===============================
- ## Terraform (Infrastrcture as a code)
+
+## Terraform (Infrastrcture as a code)
+
 ===============================
     we have a commands for init plan apply and destroy
-    modules we can use 
+    modules we can use
+
 # Blue green deployment
+
     ---------------------
     In our project, we used Blue-Green deployment across multiple production regions.
     We first created new instances (Green), deployed the application and Data Plane, and synced it with Kong Konnect Control Plane.
@@ -373,19 +456,23 @@
     # drift: Run terraform apply → to reconcile drift.
              Run terraform refresh → to sync the state.
     
-# Your team stores Terraform state in an S3 backend. During an apply, you get an error saying:
+# Your team stores Terraform state in an S3 backend. During an apply, you get an error saying
+
     Error acquiring state lock: ConditionalCheckFailedException
     terraform using dynamo db for state lock so somebady is alredy apply done
     so we need to wait until the sucess after that we can use terraform force-unlock <lock-id>
 
 # You lost your local terraform.tfstate file — what do you do?
+
     if the backend we can use the s3 bucket for storage
     we can re-run the terraform init it will download the .tfstate file
 
-# You have a Terraform setup for multiple OUs (Dev, Prod, Security) under AWS Organization.
+# You have a Terraform setup for multiple OUs (Dev, Prod, Security) under AWS Organization
+
     You only want to apply the changes to the Dev OU. How do you ensure that?
 
 # how we can choose tf state file in s3 bucket?
+
     we can use backend.tf
     we can use versioning_configuration statu= enable 
 
@@ -394,10 +481,13 @@
     
 
 =====================================
+
 # Harness
+
 ==================================
 
 # Compare the Harness and Azure DevOps
+
     Azure DevOps is complete devops related like boards, repos ci cd 
 
     In my last project, we used both Azure DevOps and Harness, so I’ve seen the difference firsthand.
@@ -411,9 +501,11 @@
     We used Harness connectors for Git, SonarQube, and AWS, so we didn’t have to script authentication or API calls manually. The pipeline triggered automatically on each commit, built the artifact using Maven, ran the SonarQube quality gate, and then built and pushed the Docker image to ECR. From there, our Harness CD pipeline deployed it to EKS. Everything ran through the Harness delegate, keeping credentials secure and infrastructure isolated. This reduced our YAML complexity drastically compared to Azure DevOps.
 
 # What is a Harness Delegate?
+
     A: A Delegate is a lightweight agent installed in your environment (on-prem or cloud) that connects Harness to your infrastructure securely. It executes pipeline tasks like deployments, fetching artifacts, or connecting to Kubernetes clusters.
 
 # How did you handle rollbacks in Harness?
+
     A: Harness’ continuous verification feature monitored metrics/logs after deployment. If the plugin or service failed health checks, Harness automatically rolled back to the last stable version.
 
 
@@ -426,11 +518,11 @@
     pipeline
     azure devops secrect integrate
 
-
 =========================================
+
 ## Azure DevOps
-=========================================
 
+=========================================
 
     ---------------
     “In my last project, we deployed a .NET microservice (code stored in Azure Repos) to AWS EKS using Azure DevOps pipelines.
@@ -446,7 +538,7 @@
 
     I also optimized the pipeline by enabling build caching and implemented approval gates before production deployment, ensuring smooth and secure delivery across Dev, QA, and Prod environments.”
     -----------------------------
-    Issue	                                    | Resolution
+    Issue                                     | Resolution
     Build failed due to missing NuGet packages: Cached dependencies and fixed version in .csproj
     Terraform apply failed (state lock / permission):   Used unique state files and fixed SPN roles
     Trivy scan failed (high CVEs):  Updated base image and re-scanned
@@ -454,9 +546,9 @@
     Secrets not fetched from Key Vault: Updated Key Vault policy and renewed SPN certificate
     5xx errors after deployment:    Added missing environment variable and redeployed
     Pipeline too slow:  Added caching and parallel jobs to reduce time
-    Merge blocked by branch policy:	Resolved PR conflicts and re-ran validation build
-    Terraform drift detected:	Re-ran plan, reviewed manual changes, and re-applied infra
-    SonarQube quality gate failed:	Fixed code smells and vulnerabilities before merge
+    Merge blocked by branch policy: Resolved PR conflicts and re-ran validation build
+    Terraform drift detected: Re-ran plan, reviewed manual changes, and re-applied infra
+    SonarQube quality gate failed: Fixed code smells and vulnerabilities before merge
 
 
 
@@ -493,3 +585,36 @@
 
     =============
     Thanks for the opportunity. I’m committed to giving my 100% and delivering the best results — both technically and professionally.”
+
+
+=======================
+## Resume Points
+========================
+
+migrate the data
+create data base to database bydirectioal synch
+anlyging the roles permissions tables relations
+
+# Optimized cloud infrastructure costs by right-sizing EC2/EKS workloads, reducing over-provisioned CPU and memory usage.
+# Identified and removed unused resources (EC2, EBS, ELB, snapshots, NAT Gateways) using cost reports and automation scripts.
+cloudwatch
+    Identify the unused EC2 Instance through cloud watch <5% average 30days period.
+    No network in/out activity
+aws cost explorer
+
+-------------------
+    
+
+
+
+=================================
+TransUnion – Banking Project as a Sr DevOps Engineer 
+Roles and Responsibilities
+# Automated deployment of DP (Data Plane), CP (Control Plane), CPG (Control Plane Group), required custom plugins, and API deployments with Ansible Tower and AWX, and leveraging Konnect UI for proactive monitoring and validation.
+# Designed and implemented multi-cloud Blue-Green deployment pipelines in Harness CI/CD, leveraging
+# Terraform to provision EC2 environments across AWS, Azure, GCP, and on-prem data centers.
+# Automated deployment verification and post-deployment checks via Konnect UI, improving release confidence and reducing manual validation efforts.
+# Automated repository migration workflows from Bitbucket, GitHub, and GitLab by designing CI/CD pipelines in Harness, while also managing and maintaining inventory repositories to ensure consistency and traceability. 
+# Migrated existing deployment workflows from Ansible Tower/Jenkins to Harness, improving release speed and reducing operational overhead.
+# Developed and maintained Ansible playbooks and roles to standardize multi-environment deployments across cloud and on-prem platforms.
+------------
