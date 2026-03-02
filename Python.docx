@@ -1,0 +1,11 @@
+install modules in linux machine
+    boto3: AWS automation
+    paramiko: connect ssh
+    fabric: advance version of parameto (connected different server and extcute the tasks in diff servers)
+    kubernets: for k8
+    docker: for docker
+    requests: call api request like curl command GET, PUT, DELETE and CREATE
+    pyyaml: reading the yaml files
+    pytest: for testing the code like unit test and function tests
+
+    documentation links
